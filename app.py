@@ -13,15 +13,9 @@ from utils.detect_utils import run_detection
 
 st.set_page_config(page_title="🩻 CliniScan - Lung Abnormality Detection", layout="wide")
 
-# -------------------------------
-# 1️⃣ Load class names
-# -------------------------------
 with open("models/classes.json", "r") as f:
     CLASS_NAMES = json.load(f)
 
-# -------------------------------
-# 2️⃣ Load Models (cached so they load only once)
-# -------------------------------
 @st.cache_resource
 def load_classification_model():
     model = efficientnet_b0(weights=None)
@@ -43,9 +37,6 @@ transform = transforms.Compose([
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
-# -------------------------------
-# 3️⃣ Streamlit UI
-# -------------------------------
 st.title("🩻 CliniScan: Lung Abnormality Detection using AI")
 st.markdown(
     "Upload a **Chest X-ray** to analyze for abnormalities and visualize "
@@ -60,7 +51,6 @@ if uploaded_file:
 
     col1, col2 = st.columns(2)
 
-    # ---------------- CLASSIFICATION + GRAD-CAM ----------------
     with col1:
         st.subheader("🔍 Classification Results")
 
@@ -79,5 +69,29 @@ if uploaded_file:
         overlay = overlay_heatmap(resized_img, heatmap)
         st.image(overlay, caption="Grad-CAM Interpretability", use_column_width=True)
 
-    # ---------------- DETECTION ----------------
     with col2:
+        st.subheader("📦 Object Detection")
+        annotated_img, detections = run_detection(det_model, np.array(image))
+        st.image(annotated_img, caption="Detected Abnormalities", channels="BGR", use_column_width=True)
+
+        if detections:
+            st.write("**Detected:**")
+            for d in detections:
+                st.write(f"- {d['class']}: {d['confidence']:.2%}")
+        else:
+            st.write("No abnormalities detected.")
+
+st.markdown("---")
+st.header("📊 Model Analysis: Strengths & Weaknesses")
+st.markdown("""
+### ✅ Strengths
+- High accuracy (92.77%) in multi-label chest X-ray classification using EfficientNet-B0.
+- Grad-CAM improves interpretability for medical experts.
+- YOLOv8 provides localization of lesions with bounding boxes.
+
+### ⚠️ Weaknesses
+- Detection model trained on a small dataset (880 labeled images) — some classes like Effusion and Nodule have lower accuracy.
+- Performance may degrade for low-contrast or noisy scans.
+- Misclassification possible for overlapping pathologies.
+- Interpretability limited to 2D visual heatmaps.
+""")
