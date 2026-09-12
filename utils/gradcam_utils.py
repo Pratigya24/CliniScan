@@ -5,13 +5,16 @@ import cv2
 from torchvision.models.feature_extraction import create_feature_extractor
 
 
-def generate_gradcam(model, img_tensor, layer_name="features.8.0"):
+def generate_gradcam(model, img_tensor, layer_name="features.8"):
     """
     Generates a Grad-CAM style heatmap for a classification model.
-    layer_name is the last conv layer of EfficientNet-B0.
+    layer_name is the last feature block of EfficientNet-B0.
     """
     model.eval()
-    feature_extractor = create_feature_extractor(model, {layer_name: "feat"})
+    feature_extractor = create_feature_extractor(
+        model,
+        {layer_name: "feat"}
+    )
 
     with torch.no_grad():
         out = feature_extractor(img_tensor.unsqueeze(0))
@@ -28,8 +31,16 @@ def generate_gradcam(model, img_tensor, layer_name="features.8.0"):
 def overlay_heatmap(original_img_np, heatmap, alpha=0.4):
     """
     Overlays a heatmap on top of the original image.
-    original_img_np must be a (224, 224, 3) uint8 numpy array.
     """
-    heatmap_colored = cv2.applyColorMap(np.uint8(255 * heatmap), cv2.COLORMAP_JET)
-    overlay = cv2.addWeighted(original_img_np, 1 - alpha, heatmap_colored, alpha, 0)
+    heatmap_colored = cv2.applyColorMap(
+        np.uint8(255 * heatmap),
+        cv2.COLORMAP_JET
+    )
+    overlay = cv2.addWeighted(
+        original_img_np,
+        1 - alpha,
+        heatmap_colored,
+        alpha,
+        0
+    )
     return overlay
