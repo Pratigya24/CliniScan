@@ -47,7 +47,7 @@ uploaded_file = st.file_uploader("Upload Chest X-ray image", type=["jpg", "jpeg"
 
 if uploaded_file:
     image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, caption="Uploaded X-ray", use_column_width=True)
+    st.image(image, caption="Uploaded X-ray", width="stretch")
 
     col1, col2 = st.columns(2)
 
@@ -67,12 +67,12 @@ if uploaded_file:
         heatmap, _ = generate_gradcam(clf_model, img_tensor)
         resized_img = np.array(image.resize((224, 224)))
         overlay = overlay_heatmap(resized_img, heatmap)
-        st.image(overlay, caption="Grad-CAM Interpretability", use_column_width=True)
+        st.image(overlay, caption="Grad-CAM Interpretability", width="stretch")
 
     with col2:
         st.subheader("📦 Object Detection")
         annotated_img, detections = run_detection(det_model, np.array(image))
-        st.image(annotated_img, caption="Detected Abnormalities", channels="BGR", use_column_width=True)
+        st.image(annotated_img, caption="Detected Abnormalities", channels="BGR", width="stretch")
 
         if detections:
             st.write("**Detected:**")
